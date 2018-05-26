@@ -26,17 +26,17 @@ def registerNode(**args):
         "node_name": data['node_name'],
         "signals": data['signals'],
         "topic" : data['topic']
-    })    
+    })
     doc.insert(ignore_permissions=True)
     return doc
 
-@frappe.whitelist(allow_guest=True)
 def getNode(node_id):
     node = frappe.get_doc("Node", node_id)
     print node
     return node
 
+@frappe.whitelist(allow_guest=True)
 def getNodes():
     node = frappe.get_all("Node")
     print node
-    return node    
+    return node
