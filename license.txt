@@ -1,1 +1,1 @@
-License: Proprietary
+License: MIT
