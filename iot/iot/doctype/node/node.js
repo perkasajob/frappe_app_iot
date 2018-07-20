@@ -4,7 +4,7 @@
 frappe.ui.form.on('Node', {
 	refresh: function(frm) {
 		frm.add_custom_button(__('Dashboard'), function(){
-			window.location = window.location.origin + '/iot?node=' + frm.docname
+			window.location = window.location.origin + '/rtdash?node=' + frm.docname
 			
 		});
 	}	

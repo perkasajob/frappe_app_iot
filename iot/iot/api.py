@@ -17,7 +17,3 @@ def getNodes():
 @frappe.whitelist(allow_guest=True)
 def getLogin():
     return {'usr':"perkasajob@gmail.com", 'pwd': "ssdd"}
-
-@frappe.whitelist(allow_guest=True)
-def getSomething():
-    return {'usr':"perkasajob@gmail.com", 'pwd': "ssss"}    
