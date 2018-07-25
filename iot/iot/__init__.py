@@ -65,13 +65,23 @@ def PLCTypeCasting(estype):
     else:
         return ''
 
+def parseSignalScalingFloat(val):
+    signalScaling = 1.0
+    if val != None:
+        try: 
+            signalScaling = float(val)
+        except ValueError:
+            print val +" : Not a float"
+    return signalScaling        
+
+
 @frappe.whitelist(allow_guest=True)
 def getDeviceConfig(node_id):
     from collections import OrderedDict
     res = OrderedDict()
     node = frappe.get_doc("Node", node_id)
-    for signal in node.signal:
-        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': signal.scaling}
+    for signal in node.signal:        
+        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': parseSignalScalingFloat(signal.scaling), 'offset': signal.offset }
         if signal.ip in res: res[signal.ip].append(dat)
         else: res[signal.ip]= [dat]
 
@@ -80,7 +90,6 @@ def getDeviceConfig(node_id):
         for r in res[re]:
             rw = r['rw']
             resRW[rw].append(r)
-            
         res[re] = resRW
 
     for re in res:
@@ -90,7 +99,8 @@ def getDeviceConfig(node_id):
                 estype = r['type']
                 r['type'] = convert2sqlite3Type(r['type'])
                 if estype == 'boolean' or estype == 'byte':
-                    del r['scaling'] # dont need scaling for boolean or byte-digital                   
+                    del r['scaling'] # dont need scaling for boolean or byte-digital
+                    del r['offset']
 
                 del r['rw']
                 if estype == 'byte': # change byte to digital, since byte is reserved word in PLC Workbench
@@ -102,15 +112,12 @@ def getDeviceConfig(node_id):
                 else:
                     r['id'] = 0
                     resType[estype] = [r]
-
-            
-            
             res[re][resw]= resType
    
 
     return {"db_filename": "device.db",\
         "clientId" : node.name,
-        "topic": node.topic,
+        "topic": node.topic.replace('#', node.name),
         "thingName": node.name,
         "devices" : res
     }
@@ -127,7 +134,7 @@ def getPLCInterface(node_id):
 
     for re in res:
         idx = {}
-        str = ''
+        strSignal = ''
         for r in res[re]:
             estype = r['type']
 
@@ -138,10 +145,47 @@ def getPLCInterface(node_id):
                 idx[estype] = idx[estype] + 1
             else:
                 idx[estype] = 0
-            str += '{}[{}] :=  {}();\n\r'.format(estype, idx[estype], PLCTypeCasting(r['type']) )
+            strSignal += '{}[{}] :=  {}({});\n\r'.format(estype, idx[estype], PLCTypeCasting(r['type']), "* "+ r['label'] +" *")
 
-        res[re]= str        
+        res[re]= strSignal        
     return res
+
+@frappe.whitelist(allow_guest=True)
+def getPLCInterfaceWithScaling(node_id):
+    from collections import OrderedDict
+    res = OrderedDict()
+    node = frappe.get_doc("Node", node_id)
+    for signal in node.signal:
+        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': signal.scaling, 'offset': signal.offset}
+        if signal.ip in res: res[signal.ip].append(dat)
+        else: res[signal.ip]= [dat]
+
+    for re in res:
+        idx = {}
+        strSignal = ''
+        for r in res[re]:
+            estype = r['type']
+
+            if estype == 'byte': # change byte to digital, since byte is reserved word in PLC Workbench
+                estype = 'digital'
+
+            if estype in idx:
+                idx[estype] = idx[estype] + 1
+            else:
+                idx[estype] = 0
+            typeCasting = PLCTypeCasting(r['type'])
+            strScale =''
+            if estype != 'digital':
+                if r['scaling'] != None:
+                    typeCasting, r['scaling']
+                    strScale += '*{}({})'.format(typeCasting, r['scaling'])
+                if r['offset'] != 0.0:
+                    strScale += '+{}({})'.format(typeCasting, r['offset'])
+            strSignal += '{}[{}] :=  {}({}){};\n\r'.format(estype, idx[estype], typeCasting, "* "+ r['label'] +" *", strScale)
+
+        res[re]= strSignal        
+    return res    
+
 
 
 @frappe.whitelist(allow_guest=True)
