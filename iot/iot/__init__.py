@@ -68,11 +68,11 @@ def PLCTypeCasting(estype):
 def parseSignalScalingFloat(val):
     signalScaling = 1.0
     if val != None:
-        try: 
+        try:
             signalScaling = float(val)
         except ValueError:
             print val +" : Not a float"
-    return signalScaling        
+    return signalScaling
 
 
 @frappe.whitelist(allow_guest=True)
@@ -80,13 +80,13 @@ def getDeviceConfig(node_id):
     from collections import OrderedDict
     res = OrderedDict()
     node = frappe.get_doc("Node", node_id)
-    for signal in node.signal:        
+    for signal in node.signal:
         dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': parseSignalScalingFloat(signal.scaling), 'offset': signal.offset }
         if signal.ip in res: res[signal.ip].append(dat)
         else: res[signal.ip]= [dat]
 
     for re in res:
-        resRW = {'read':[], 'write':[]}        
+        resRW = {'read':[], 'write':[]}
         for r in res[re]:
             rw = r['rw']
             resRW[rw].append(r)
@@ -94,8 +94,8 @@ def getDeviceConfig(node_id):
 
     for re in res:
         for resw in res[re]:
-            resType = OrderedDict()        
-            for r in res[re][resw]:            
+            resType = OrderedDict()
+            for r in res[re][resw]:
                 estype = r['type']
                 r['type'] = convert2sqlite3Type(r['type'])
                 if estype == 'boolean' or estype == 'byte':
@@ -107,13 +107,13 @@ def getDeviceConfig(node_id):
                    estype = 'digital'
 
                 if estype in resType:
-                    r['id'] = resType[estype][-1]['id'] + 1 
-                    resType[estype].append(r)                
+                    r['id'] = resType[estype][-1]['id'] + 1
+                    resType[estype].append(r)
                 else:
                     r['id'] = 0
                     resType[estype] = [r]
             res[re][resw]= resType
-   
+
 
     return {"db_filename": "device.db",\
         "clientId" : node.name,
@@ -121,7 +121,7 @@ def getDeviceConfig(node_id):
         "thingName": node.name,
         "devices" : res
     }
-    
+
 @frappe.whitelist(allow_guest=True)
 def getPLCInterface(node_id):
     from collections import OrderedDict
@@ -147,7 +147,7 @@ def getPLCInterface(node_id):
                 idx[estype] = 0
             strSignal += '{}[{}] :=  {}({});\n\r'.format(estype, idx[estype], PLCTypeCasting(r['type']), "* "+ r['label'] +" *")
 
-        res[re]= strSignal        
+        res[re]= strSignal
     return res
 
 @frappe.whitelist(allow_guest=True)
@@ -183,13 +183,13 @@ def getPLCInterfaceWithScaling(node_id):
                     strScale += '+{}({})'.format(typeCasting, r['offset'])
             strSignal += '{}[{}] :=  {}({}){};\n\r'.format(estype, idx[estype], typeCasting, "* "+ r['label'] +" *", strScale)
 
-        res[re]= strSignal        
-    return res    
+        res[re]= strSignal
+    return res
 
 
 
 @frappe.whitelist(allow_guest=True)
-def getESIndex(node_id):
+def getESIndex_old(node_id):
     node = frappe.get_doc("Node", node_id)
 
     obj= { \
@@ -212,7 +212,37 @@ def getESIndex(node_id):
             obj['mappings']['node']['properties']['data']['properties'][label]={'type': s.data_type, 'scaling_factor': 100}
         else:
             obj['mappings']['node']['properties']['data']['properties'][label]={'type': s.data_type}
-        
+
     obj['mappings']['node']['properties']['data']['properties']['id'] = {'type' : 'date', 'format' :'epoch_millis'} # adding id as timestamp
+    return obj
+
+@frappe.whitelist(allow_guest=True)
+def getESIndex(node_id):
+    node = frappe.get_doc("Node", node_id)
+
+    obj= { \
+    'mappings': {    \
+        'node': {    \
+            'properties': {     \
+                'id':{\
+                'type' : 'date', 'format' :'epoch_millis'\
+                },\
+                'name':{\
+                'type': 'text'\
+                }\
+            }\
+        },\
+    }
+    }
+    for s in node.signal:
+        label = s.label.replace(" ", "_")
+        ip = s.ip.replace(".","_")
+        if ip not in obj['mappings']['node']['properties']:
+            obj['mappings']['node']['properties'][ip] = {'properties' : {}}
+        if s.data_type == 'scaled_float':
+            obj['mappings']['node']['properties'][ip]['properties'][label]={'type': s.data_type, 'scaling_factor': 100}
+        else:
+            obj['mappings']['node']['properties'][ip]['properties'][label]={'type': s.data_type}
+
     return obj
 

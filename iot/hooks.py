@@ -79,6 +79,11 @@ app_license = "Proprietary"
 # ---------------
 # Hook on document methods and events
 
+doc_events = {
+    "Node": {
+        "before_save": "iot.iot.socket.update_device_config"
+    }
+}
 # doc_events = {
 # 	"*": {
 # 		"on_update": "method",
