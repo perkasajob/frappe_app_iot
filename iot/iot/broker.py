@@ -84,14 +84,10 @@ class ServerConnection:
 
     def publishValue(self, val, id = None, topic = None):
         current_milli_time = lambda: int(round((time.time()-timeOffset) * 1000))
-        val = { 'name' : self.clientId,\
-                'data' : val,\
-                # 'id': current_milli_time() if id is None else id \
-        }
+        val.update({ 'name' : self.clientId })
         print("publish: " + json.dumps(val))
-        # pdb.set_trace()
         self.myAWSIoTMQTTClient.publish(self.topic if topic is None else topic, json.dumps(val), 0)
-        # time.sleep(1)
+
 
     def bindResponseMsg(self, f):
         self.callbackFcn = f
@@ -118,11 +114,11 @@ class ServerConnection:
         self.deviceShadowHandler.shadowRegisterDeltaCallback(customShadowCallback_Delta)
 
 
-    def __init__(self, host, rootCAPath, clientId, topic1, thingName, is_shadow):
+    def __init__(self, host, rootCAPath, clientId, topic, thingName, is_shadow):
         self.callbackFcn = None
-        self.clientId = clientId
-        self.thingName = thingName
-        self.topic = 'JetFlex/cmd/alphaServer'
+        self.clientId = str(clientId)
+        self.thingName = str(thingName)
+        self.topic = str(topic)
 
         # Configure logging
         logger = logging.getLogger("AWSIoTPythonSDK.core")
