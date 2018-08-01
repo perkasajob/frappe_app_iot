@@ -12,7 +12,7 @@ $(document).bind('toolbar_setup', function() {
 
 
 	$('.navbar-home').html('<img class="iot-icon" src="'+
-			frappe.urllib.get_base_url()+'/assets/frappe/images/JetFlex.svg" />');
+			frappe.urllib.get_base_url()+'/assets/iot/images/JetFlex.svg" />');
 
 	$('[data-link="docs"]').attr("href", "https://frappe.github.io/erpnext/")
 	$('[data-link="issues"]').attr("href", "https://github.com/frappe/erpnext/issues")
