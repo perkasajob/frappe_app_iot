@@ -16,8 +16,8 @@ app_license = "Proprietary"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/iot/css/iot.css"
-# app_include_js = "/assets/iot/js/iot.js"
-
+app_include_js = "assets/js/iot.min.js"
+app_include_css = "assets/css/iot.css"
 # include js, css files in header of web template
 # web_include_css = "/assets/iot/css/iot.css"
 # web_include_js = "/assets/iot/js/iot.js"
@@ -53,7 +53,10 @@ app_license = "Proprietary"
 
 # Installation
 # ------------
-
+website_context = {
+	"favicon": 	"/assets/iot/images/JetFlex-ico.png",
+	"splash_image": "/assets/iot/images/JetFlex.svg"
+}
 # before_install = "iot.install.before_install"
 # after_install = "iot.install.after_install"
 

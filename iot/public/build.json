@@ -1,0 +1,8 @@
+{
+    "css/iot.css": [
+        "public/less/iot.less"
+    ],	
+    "js/iot.min.js": [
+        "public/js/conf.js"        
+    ]
+}
