@@ -81,7 +81,7 @@ def getDeviceConfig(node_id):
     res = OrderedDict()
     node = frappe.get_doc("Node", node_id)
     for signal in node.signal:
-        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': parseSignalScalingFloat(signal.scaling), 'offset': signal.offset }
+        dat = {'name' : signal.name, 'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': parseSignalScalingFloat(signal.scaling), 'offset': signal.offset }
         if signal.ip in res: res[signal.ip].append(dat)
         else: res[signal.ip]= [dat]
 
