@@ -6,6 +6,7 @@ from frappe import utils
 import json, requests
 
 
+
 @frappe.whitelist(allow_guest=True)
 def getDevicesPath():
     # return frappe.session.user
@@ -114,12 +115,22 @@ def getDeviceConfig(node_id):
                     resType[estype] = [r]
             res[re][resw]= resType
 
+    ws = frappe.get_doc("Work Shift Settings")
+
+    work_shift = {'shift_1_start': ws.shift_1_start, 'shift_1_end': ws.shift_1_end,\
+                  'shift_2_start': ws.shift_2_start, 'shift_2_end': ws.shift_2_end,\
+                  'shift_3_start': ws.shift_3_start, 'shift_3_end': ws.shift_3_end }
 
     return {"db_filename": "device.db",\
         "clientId" : node.name,
         "topic": node.topic.replace('#', node.name),
         "thingName": node.name,
-        "devices" : res
+        "devices" : res,
+        "work_shift": work_shift,
+        "scan_interval": node.scan_interval,
+        "send_trigger": node.send_trigger,
+        "immediate_start": node.immediate_start,
+        "time_offset" : node.time_offset  # microseconds
     }
 
 @frappe.whitelist(allow_guest=True)
@@ -245,4 +256,11 @@ def getESIndex(node_id):
             obj['mappings']['node']['properties'][ip]['properties'][label]={'type': s.data_type}
 
     return obj
+
+
+
+@frappe.whitelist(allow_guest=True)
+def workshiftsettings():
+
+    return frappe.get_doc("Work Shift Settings")
 
