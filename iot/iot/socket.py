@@ -16,10 +16,10 @@ def on_message_received(message):
 
 #os.environ.get('IOT_SERVER')
 sc = ServerConnection( \
-    'a38n08celxxznq.iot.us-east-1.amazonaws.com',\
+    frappe.get_conf().get("iot_server"),\
     os.path.dirname(os.path.realpath(__file__))+'/root-CA.crt',
     'alpha_server',\
-    'JetFlex/cmd/alphaServer' ,\
+    frappe.get_conf().get("iot_alpha_topic") ,\
     'alpha_server', False)
 print "Connecting ..................................................."
 sc.bindResponseMsg(on_message_received)

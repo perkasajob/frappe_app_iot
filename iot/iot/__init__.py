@@ -4,6 +4,7 @@ from frappe import msgprint
 from frappe.utils import nowdate
 from frappe import utils
 import json, requests
+from elasticsearch import Elasticsearch
 
 
 
@@ -260,7 +261,34 @@ def getESIndex(node_id):
 
 
 @frappe.whitelist(allow_guest=True)
-def workshiftsettings():
+def getSignalList(node_id):
+    print("++++++++++++++++++++")
+    print(node_id)
+    node = frappe.get_doc("Node", node_id)
+    data = []
+    for signal in node.signal:
+        data.append({'label': signal.label.replace(" ", "_"), 'ip': signal.ip.replace(".", "_")})
+    return data
 
+
+@frappe.whitelist(allow_guest=True)
+def workshiftsettings():
     return frappe.get_doc("Work Shift Settings")
+
+@frappe.whitelist(allow_guest=True)
+def getWebsocket():
+    print(frappe.get_conf().get("site_name"))
+    res = requests.get(frappe.get_conf().get("ws_address"))
+    return json.loads(res.content)
+
+@frappe.whitelist(allow_guest=True)
+def getProductionOutput():
+    es = Elasticsearch([frappe.get_conf().get("elastic_server")],scheme="https",
+    port=443,)
+    doc = {"size":0,"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yyyy-MM-dd HH:mm:ss","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.M1_Product_Output"}},"max_output2":{"max":{"field":"192_168_1_128.M2_Product_Output"}},"adder":{"bucket_script":{"buckets_path":{"tmax_output1":"max_output1","tmax_output2":"max_output2"},"script":"params.tmax_output1 + params.tmax_output2"}}}}}}
+    res = es.search(index="lionwings", body=doc)
+    return res
+
+
+
 
