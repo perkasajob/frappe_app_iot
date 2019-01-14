@@ -1,8 +1,11 @@
 {
     "css/iot.css": [
         "public/less/iot.less"
-    ],	
+    ],
+    "css/iot.custom.css": [
+        "public/css/iot.custom.css"
+    ],
     "js/iot.min.js": [
-        "public/js/conf.js"        
+        "public/js/conf.js"
     ]
 }

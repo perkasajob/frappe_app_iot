@@ -1,0 +1,24 @@
+{
+ "content": null, 
+ "creation": "2019-01-06 16:08:56.479831", 
+ "docstatus": 0, 
+ "doctype": "Page", 
+ "icon": "fa fa-play", 
+ "idx": 0, 
+ "modified": "2019-01-13 14:51:24.781636", 
+ "modified_by": "Administrator", 
+ "module": "IOT", 
+ "name": "testdashboard1", 
+ "owner": "Administrator", 
+ "page_name": "TestDashboard1", 
+ "roles": [
+  {
+   "role": "All"
+  }
+ ], 
+ "script": null, 
+ "standard": "Yes", 
+ "style": null, 
+ "system_page": 0, 
+ "title": "testDashboard"
+}

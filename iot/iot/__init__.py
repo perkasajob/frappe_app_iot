@@ -275,7 +275,7 @@ def getSignalList(node_id):
 def workshiftsettings():
     return frappe.get_doc("Work Shift Settings")
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def getWebsocket():
     print(frappe.get_conf().get("site_name"))
     res = requests.get(frappe.get_conf().get("ws_address"))
@@ -288,7 +288,3 @@ def getProductionOutput():
     doc = {"size":0,"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yyyy-MM-dd HH:mm:ss","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.M1_Product_Output"}},"max_output2":{"max":{"field":"192_168_1_128.M2_Product_Output"}},"adder":{"bucket_script":{"buckets_path":{"tmax_output1":"max_output1","tmax_output2":"max_output2"},"script":"params.tmax_output1 + params.tmax_output2"}}}}}}
     res = es.search(index="lionwings", body=doc)
     return res
-
-
-
-
