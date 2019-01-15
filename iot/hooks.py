@@ -24,7 +24,7 @@ app_include_css = ["assets/css/iot.css"]
 # web_include_js = "/assets/iot/js/iot.js"
 
 # include js in page
-page_js = {"testdashboard1" : ["public/js/mqtt.js","public/js/RealtimeClient.js","public/js/muuri.js","public/js/gauge.js" ]}
+page_js = {"testdashboard1" : ["public/js/mqtt.js","public/js/RealtimeClient.js","public/js/muuri.js","public/js/gauge.js", "public/js/frappe_chart_1.1.0.js" ]}
 
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}

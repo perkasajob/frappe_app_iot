@@ -6,7 +6,6 @@
         "public/css/iot.custom.css"
     ],
     "js/iot.min.js": [
-        "public/js/conf.js",
-        "public/js/frappe_chart_1.1.0.js"
+        "public/js/conf.js"
     ]
 }
