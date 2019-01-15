@@ -30,5 +30,18 @@ $(document).bind('toolbar_setup', function() {
 		target="_blank">'+__('Chat')+'</a></li>').insertBefore($help_menu);
 	$('<li><a href="https://github.com/frappe/erpnext/issues" \
 		target="_blank">'+__('Report an Issue')+'</a></li>').insertBefore($help_menu);
+	$('<li><a href="https://kompas.com" \
+	target="_blank">'+__('Dashboard')+'</a></li>').insertAfter($help_menu);
 
 });
+
+// $(document).on("page-change", function() {
+// 	$(function() {
+// 		if($("#dashboardIcon").length == 0 && window.location.pathname == '/desk')
+// 			$('#icon-grid').append('<div id="dashboardIcon" class="case-wrapper" data-name="Dashboard" data-link="testdashboard1" title="Dashboard"> <div class="app-icon" style="background-color: #5CDB95" title="Dashboard"><i class="octicon octicon-graph" title="Social" style=""></i></div> <div class="case-label ellipsis"> <div class="circle module-count-social" data-doctype="" style="display: none;"> <span class="circle-text"></span> </div>  <span class="case-label-text">Dashboard</span> </div> </div>')
+// 	})
+// });
+
+
+
+

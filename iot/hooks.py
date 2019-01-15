@@ -7,7 +7,7 @@ app_title = "IOT"
 app_publisher = "JETFOX - PT.Perkasa Jaya Kirana"
 app_description = "Connected Devices and sensors"
 app_icon = "octicon octicon-radio-tower"
-app_color = "green"
+app_color = "#008080"
 app_email = "perkasajob@gmail.com"
 app_license = "Proprietary"
 

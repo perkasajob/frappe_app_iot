@@ -301,23 +301,21 @@
   }
 
 
-  .red-circle {
-    width: 25px;
-    height: 25px;
+  .red-led {
     background: red;
-    border-radius: 50%
   }
-  .green-circle {
-    width: 25px;
-    height: 25px;
+  .green-led {
     background: #35F705;
-    border-radius: 50%
   }
-  .grey-circle {
+  .grey-led {
+    background: grey;
+  }
+
+  .led{
     width: 25px;
     height: 25px;
-    background: grey;
-    border-radius: 50%
+    border-radius: 50%;
+    border: 2px solid darkgrey;
   }
 
   meter {

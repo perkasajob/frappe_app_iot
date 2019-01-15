@@ -47,21 +47,26 @@ let viz_group = []
 let chartPtNr = 10
 let dataId = 0
 let data=[]
+let nodeId = ''
+let nodes=[]
+let page=null
 
 
-function doResize(event) {
-	debugger
-	var scale, origin;
+function goToNode(selectedNode){
+	nodeId = selectedNode
+	loadConfigs(page.parent, nodeId)
+	$('#selectNode').hide()
+	// window.location.assign(window.location.href+"/?node="+selectedNode)
+	// window.location.reload()
+}
 
-	scale = Math.min(
-	  ui.size.width / elWidth,
-	  ui.size.height / elHeight
-	);
 
-	$el.css({
-	  transform: "translate(-50%, -50%) " + "scale(" + scale + ")"
-	});
-
+function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
 }
 
 function addData( obj, visualization ){
@@ -146,16 +151,43 @@ function chartsRedraw(charts, chartData){
 	}
 }
 
+function loadConfigs(wrapper, nodeId){
+	$.ajax({
+		url: "/api/resource/Node/" + nodeId,
+		type: "GET",
+		success: function(r){
+			if(r.data) {
+				console.log(r.data)
+				if (nodeId){
+					configs = r.data
+					for(var i=0; i < configs.signal.length; i++ ){
+						configs.signal[i].elId = configs.signal[i].label.replace(/\s/g, '_');
+						configs.signal[i].ip = configs.signal[i].ip.replace('.','_')
+						configs.signal[i].value = 0
+					}
+				} else{
+					nodes = r.data
+				}
+			}
+		}
+	}).always(function() {
+		wrapper.setup = new iot.testdashboard1.SetupHelper(wrapper);
+		window.cur_setup = wrapper.setup;
+	})
+}
+
 
 
 frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
-	var page = frappe.ui.make_app_page({
+	page = frappe.ui.make_app_page({
 		parent: wrapper,
 		title: 'testDashboard',
 		single_column: true
 	});
 
 
+	nodeId = getUrlVars(window.location.href)['node']
+	wrapper = wrapper
 
 	console.log(page)
 	page.add_menu_item('IOT', () => frappe.set_route('List','Node' ))
@@ -195,9 +227,9 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 										    break;
 										case 'switch':
 											if(s.value)
-												$('#'+s.elId).removeClass("red-circle grey-circle").addClass('green-circle')
+												$('#'+s.elId).removeClass("red-led grey-led").addClass('green-led')
 											else
-												$('#'+s.elId).removeClass("green-circle grey-circle").addClass('red-circle')
+												$('#'+s.elId).removeClass("green-led grey-led").addClass('red-led')
 											break;
 										case 'hz-bar':
 											$('#'+s.elId).val(s.value)
@@ -223,25 +255,11 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 			setTimeout(function () {client.connect()}, 2)
 		}
 	})
-    $.ajax({
-		url: "/api/resource/Node/PLC1",
-		type: "GET",
-		success: function(r){
-			if(r.data) {
-				console.log(r.data)
-				configs = r.data
-				for(var i=0; i < configs.signal.length; i++ ){
-					configs.signal[i].elId = configs.signal[i].label.replace(/\s/g, '_');
-					configs.signal[i].ip = configs.signal[i].ip.replace('.','_')
-					configs.signal[i].value = 0
-				}
-			}
-		}
-	}).always(function() {
-		wrapper.setup = new iot.testdashboard1.SetupHelper(wrapper);
-		window.cur_setup = wrapper.setup;
-	})
+	if(!nodeId){
+		nodeId=''
+	}
 
+	loadConfigs(wrapper, nodeId)
 }
 
 
@@ -257,8 +275,16 @@ iot.testdashboard1.SetupHelper = class SetupHelper {
 		];
 
 		frappe.require(assets, () => {
-			this.make();
+			if(nodeId)
+				this.make();
+			else
+				this.createSelectNode()
+
 		});
+	}
+
+	createSelectNode(){
+		$(frappe.render_template('selectNode', {data:data })).appendTo(this.wrapper);
 	}
 
 	make() {
@@ -358,7 +384,7 @@ class Dashboard {
 			}
 		})
 
-		$(frappe.render_template('testdashboard1', {data:data })).appendTo(this.wrapper);
+		$(frappe.render_template('testdashboard1', {nodes:nodes })).appendTo(this.wrapper);
 		// $("canvas").forEach(canvas=>{
 		// 	resizeCanvasToDisplaySize(canvas)
 		// })
