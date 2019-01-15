@@ -16,7 +16,7 @@ app_license = "Proprietary"
 
 # include js, css files in header of desk.html
 # app_include_css = "/assets/iot/css/iot.css"
-app_include_js = ["assets/js/iot.min.js", "public/js/frappe_chart_1.1.0.js"]
+app_include_js = "assets/js/iot.min.js"
 app_include_css = ["assets/css/iot.css"]
 
 # include js, css files in header of web template
