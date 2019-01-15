@@ -52,6 +52,11 @@ let nodes=[]
 let page=null
 
 
+if(typeof Chart === "undefined"){ // on production server is called frappeChart
+	var Chart = frappeChart
+}
+
+
 function goToNode(selectedNode){
 	nodeId = selectedNode
 	loadConfigs(page.parent, nodeId)
@@ -439,9 +444,7 @@ class Dashboard {
 						}
 					})
 
-					if(typeof Chart === "undefined"){ // on production server is called frappeChart
-						let Chart = frappeChart
-					}
+
 
 					charts[key] = new Chart('#chart'+key.replace(/\s/g,''),{
 						lineOptions: {
