@@ -53,7 +53,7 @@ let page=null
 
 
 if(typeof Chart === "undefined"){ // on production server is called frappeChart
-	var Chart = frappeChart
+	var Chart = frappeChart.Chart
 }
 
 
