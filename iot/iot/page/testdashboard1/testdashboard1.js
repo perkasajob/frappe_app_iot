@@ -439,6 +439,10 @@ class Dashboard {
 						}
 					})
 
+					if(typeof Chart === "undefined"){ // on production server is called frappeChart
+						let Chart = frappeChart
+					}
+
 					charts[key] = new Chart('#chart'+key.replace(/\s/g,''),{
 						lineOptions: {
 							hideDots: 1 // default: 0
