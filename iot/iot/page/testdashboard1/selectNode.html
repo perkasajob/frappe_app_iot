@@ -1,0 +1,7 @@
+<div id="selectNode" class="text-center">
+{% for node in nodes  %}
+    <div class="row" style="margin:10px">
+        <button type="button" class="btn btn-primary" onclick=goToNode("{{node.name}}") >{{node.name}}</button>
+    </div>
+{% endfor %}
+</div>
