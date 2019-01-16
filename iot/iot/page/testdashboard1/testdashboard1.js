@@ -438,7 +438,7 @@ class Dashboard {
 						}
 					})
 
-					if(datasets === []){ // if it is not a viz group, then search for label
+					if(datasets.length === 0){ // if it is not a viz group, then search for label
 						configs.signal.forEach(signal => {
 							if(signal.visualization === 'chart' && !signal.viz_group && signal.label === key){
 								datasets.push({name: signal.label + '('+ signal.unit +')', type: 'line', values: [] })
