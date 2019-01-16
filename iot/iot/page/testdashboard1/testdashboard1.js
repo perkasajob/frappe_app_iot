@@ -1,21 +1,5 @@
 frappe.provide('iot.testdashboard1');
 
-$.fn.gauge = function(opts) {
-	this.each(function() {
-	  var $this = $(this),
-		  data = $this.data();
-
-	  if (data.gauge) {
-		data.gauge.stop();
-		delete data.gauge;
-	  }
-	  if (opts !== false) {
-		data.gauge = new Gauge(this).setOptions(opts);
-	  }
-	});
-	return this;
-  };
-
 // import RealtimeClient from '/public/js/RealtimeClient';
 
 // var mqtt = frappe.require('https://unpkg.com/mqtt/dist/mqtt.min.js')
@@ -60,8 +44,8 @@ if(typeof Chart === "undefined"){ // on production server is called frappeChart
 function goToNode(selectedNode){
 	nodeId = selectedNode
 	loadConfigs(page.parent, nodeId)
+	window.location.assign(window.location.href+"/?node="+nodeId)
 	$('#selectNode').hide()
-	// window.location.assign(window.location.href+"/?node="+selectedNode)
 	// window.location.reload()
 }
 
@@ -172,6 +156,8 @@ function loadConfigs(wrapper, nodeId){
 					}
 				} else{
 					nodes = r.data
+					if(nodes.length === 1)
+						goToNode(nodes[0].name)
 				}
 			}
 		}
@@ -186,10 +172,10 @@ function loadConfigs(wrapper, nodeId){
 frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 	page = frappe.ui.make_app_page({
 		parent: wrapper,
-		title: 'testDashboard',
-		single_column: true
+		title: 'Dashboard',
+		single_column: true,
+		set_document_title: false
 	});
-
 
 	nodeId = getUrlVars(window.location.href)['node']
 	wrapper = wrapper
@@ -217,10 +203,11 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 
 									switch(s.visualization) {
 										case 'chart':
-											chartData[s.viz_group] = charts[s.viz_group].data
-											if (chartData[s.viz_group].labels[chartData[s.viz_group].labels.length-1] !== date)
-												chartData[s.viz_group].labels.push(date)
-											chartData[s.viz_group].datasets.map((dataset, i) =>{
+											let chartKey = s.viz_group? s.viz_group: s.label
+											chartData[chartKey] = charts[chartKey].data
+											if (chartData[chartKey].labels[chartData[chartKey].labels.length-1] !== date)
+												chartData[chartKey].labels.push(date)
+											chartData[chartKey].datasets.map((dataset, i) =>{
 												if (dataset.name.substring(0, s.label.length) === s.label)
 													dataset.values.push(s.value)
 												return dataset
@@ -237,11 +224,13 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 												$('#'+s.elId).removeClass("green-led grey-led").addClass('red-led')
 											break;
 										case 'hz-bar':
-											$('#'+s.elId).val(s.value)
-											$('#'+s.elId+'-text').html(s.label + ': ' + s.value.toFixed(s.f_prec) +' '+ unit)
+											let value = (s.value/((s.max||100)-(s.min||0))*100).toFixed(s.f_prec)
+											let label = s.viz_group?s.label + ': ':'' // if the it doesn't belong to group, add label, otherwise no label, only value is shown
+											$('#'+s.elId).val(value)
+											$('#'+s.elId+'-text').html(label + s.value.toFixed(s.f_prec) +' '+ unit)
 											break;
 										default:
-										  $('#'+s.elId).html(s.value.toFixed(s.f_prec))
+										  $('#'+s.elId).html(s.value.toFixed(s.f_prec)+" "+s.unit)
 									  }
 								}
 
@@ -383,8 +372,13 @@ class Dashboard {
 		addData(hz_bars, 'hz-bar')
 
 		configs.signal.forEach(s =>{
-			if(s.visualization !== 'hidden' && s.visualization !== 'chart' && !s.viz_group){
-				data.push({header : s.label, dataId: dataId, children:[s], width: s.card_width, visualization: s.visualization, unit: s.unit })
+			if(s.visualization !== 'hidden' && !s.viz_group){ //&& s.visualization !== 'chart'
+				if (s.visualization === 'chart'){ // if chart doesn't belong to a viz group, then use label as the key
+					data.push({header : s.label+'('+s.unit+')', dataId: dataId, elId: 'chart'+s.elId, children:[s], width: s.card_width, visualization: s.visualization })
+					charts[s.label] = [s]
+				} else {
+					data.push({header : s.label, dataId: dataId, children:[s], width: s.card_width, visualization: s.visualization, unit: s.unit })
+				}
 				dataId += 1
 			}
 		})
@@ -439,11 +433,18 @@ class Dashboard {
 				for( let key in charts){
 					let datasets = []
 					configs.signal.forEach(signal => {
-						if(signal.visualization === 'chart' && signal.viz_group === key){
-							datasets.push({name: signal.label + '('+ signal.unit +')', chartType: 'line', values: [] })
+						if(signal.visualization === 'chart' && signal.viz_group === key ){
+							datasets.push({name: signal.label + '('+ signal.unit +')', type: 'line', values: [] })
 						}
 					})
 
+					if(datasets === []){ // if it is not a viz group, then search for label
+						configs.signal.forEach(signal => {
+							if(signal.visualization === 'chart' && !signal.viz_group && signal.label === key){
+								datasets.push({name: signal.label + '('+ signal.unit +')', type: 'line', values: [] })
+							}
+						})
+					}
 
 
 					charts[key] = new Chart('#chart'+key.replace(/\s/g,''),{
@@ -482,8 +483,8 @@ class Dashboard {
 						opts.staticLabels.labels = [signal.min, signal.max]
 						// console.log(opts.staticLabels.labels)
 						var gauge = new Gauge(target).setOptions(opts); // create sexy gauge!
-						gauge.maxValue = 3000; // set max gauge value
-						gauge.setMinValue(0);  // set min value
+						gauge.maxValue = signal.max||100; // set max gauge value
+						gauge.setMinValue(signal.min||0);  // set min value
 						gauge.set(0); // set actual value
 
 						gauges[signal.elId] = gauge

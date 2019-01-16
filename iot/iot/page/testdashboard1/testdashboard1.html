@@ -14,6 +14,8 @@
                 {% for c in d.children  %}
                     {% if c.label != d.header %}
                         <div id={{c.elId}}-text style="font-size:{{c.font_size}}em">{{c.label}}</div>
+                    {% else %}
+                        <div id={{c.elId}}-text style="font-size:{{c.font_size}}em">_</div>
                     {% endif %}
                     <meter id={{c.elId}} min="0" low="40" high="95" max="100" value="0" title="{{c.label}}"></meter>
                 {% endfor %}
@@ -41,7 +43,7 @@
                 {% if c.label != d.header %}
                     <div>{{c.label}}</div>
                 {% endif %}
-                <div id={{c.elId}} style="font-size:{{c.font_size}}em">_</div>
+                <div id={{c.elId}} style="font-size:{{c.font_size}}em; margin-bottom:10px;">_</div>
                 {% endfor %}
             {% endif %}
             <!-- <a href="#" class="btn btn-primary">Go somewhere</a> -->
