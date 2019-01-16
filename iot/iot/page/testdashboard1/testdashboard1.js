@@ -374,7 +374,7 @@ class Dashboard {
 		configs.signal.forEach(s =>{
 			if(s.visualization !== 'hidden' && !s.viz_group){ //&& s.visualization !== 'chart'
 				if (s.visualization === 'chart'){ // if chart doesn't belong to a viz group, then use label as the key
-					data.push({header : s.label+'('+s.unit+')', dataId: dataId, elId: 'chart'+s.elId, children:[s], width: s.card_width, visualization: s.visualization })
+					data.push({header : s.label+'('+s.unit+')', dataId: dataId, elId: 'chart'+s.label.replace(/\s/g,''), children:[s], width: s.card_width, visualization: s.visualization })
 					charts[s.label] = [s]
 				} else {
 					data.push({header : s.label, dataId: dataId, children:[s], width: s.card_width, visualization: s.visualization, unit: s.unit })
