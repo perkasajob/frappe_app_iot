@@ -3,7 +3,7 @@
 // frappe.provide("frappe.report_dump");
 frappe.provide('iot.testdashboard1');
 frappe.provide("frappe.views");
-{% include 'iot/iot/page/testdashboard1/mydatatable.js' %}
+// {% include 'iot/iot/page/testdashboard1/mydatatable.js' %}
 // import RealtimeClient from '/public/js/RealtimeClient';
 
 // var mqtt = frappe.require('https://unpkg.com/mqtt/dist/mqtt.min.js')
