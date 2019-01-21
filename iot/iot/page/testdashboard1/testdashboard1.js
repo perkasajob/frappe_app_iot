@@ -268,8 +268,8 @@ iot.testdashboard1.SetupHelper = class SetupHelper {
 		this.page = wrapper.page;
 
 		const assets = [
-			'assets/jetfox/frappe-datatable.js',
-			'assets/jetfox/frappe-datatable.css',
+			// 'assets/jetfox/frappe-datatable.js',
+			// 'assets/jetfox/frappe-datatable.css',
 			'assets/css/iot.custom.css',
 		];
 
