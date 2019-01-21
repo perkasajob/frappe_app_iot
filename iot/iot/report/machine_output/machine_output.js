@@ -68,6 +68,14 @@ frappe.query_reports["Machine Output"] = {
 			}
 		},
 	],
+	onload: function(report) {
+		report.page.add_inner_button(__("Resting Button"), function() {
+			var filters = report.get_values();
+			debugger
+			alert(filters)
+			// frappe.set_route('query-report', 'Accounts Payable', {company: filters.company});
+		});
+	},
 	get_chart_data: function(columns, result) {
 
 		return {

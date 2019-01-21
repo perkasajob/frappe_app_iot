@@ -1,5 +1,9 @@
-frappe.provide('iot.testdashboard1');
 
+// import DataTable from 'frappe-datatable';
+// frappe.provide("frappe.report_dump");
+frappe.provide('iot.testdashboard1');
+frappe.provide("frappe.views");
+{% include 'iot/iot/page/testdashboard1/mydatatable.js' %}
 // import RealtimeClient from '/public/js/RealtimeClient';
 
 // var mqtt = frappe.require('https://unpkg.com/mqtt/dist/mqtt.min.js')
@@ -34,6 +38,7 @@ let data=[]
 let nodeId = ''
 let nodes=[]
 let page=null
+let grid ={}
 
 
 if(typeof Chart === "undefined"){ // on production server is called frappeChart
@@ -180,8 +185,7 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 	nodeId = getUrlVars(window.location.href)['node']
 	wrapper = wrapper
 
-	console.log(page)
-	page.add_menu_item('IOT', () => frappe.set_route('List','Node' ))
+	page.add_menu_item('Nodes', () => frappe.set_route('List','Node' ))
 
 	client = RealtimeClient(clientId, username)
 	client.connect().then(() => {
@@ -264,8 +268,9 @@ iot.testdashboard1.SetupHelper = class SetupHelper {
 		this.page = wrapper.page;
 
 		const assets = [
+			'assets/jetfox/frappe-datatable.js',
+			'assets/jetfox/frappe-datatable.css',
 			'assets/css/iot.custom.css',
-			//'assets/testdashboard1/css/setup.css'
 		];
 
 		frappe.require(assets, () => {
@@ -384,10 +389,6 @@ class Dashboard {
 		})
 
 		$(frappe.render_template('testdashboard1', {nodes:nodes })).appendTo(this.wrapper);
-		// $("canvas").forEach(canvas=>{
-		// 	resizeCanvasToDisplaySize(canvas)
-		// })
-
 	}
 
 
@@ -449,23 +450,26 @@ class Dashboard {
 
 					charts[key] = new Chart('#chart'+key.replace(/\s/g,''),{
 						lineOptions: {
-							hideDots: 1 // default: 0
+							hideDots: 0 // default: 0
 						},
 						data: {
 							labels: [],
 							datasets: datasets,
 							type: 'axis-mixed', // or 'bar', 'line', 'scatter', 'pie', 'percentage'
 							height: 300,
-							colors: ['#7cd6fd', '#743ee2','purple', '#ffa3ef', 'light-blue']
-						}
+						},
+						colors: ['#7cd6fd', '#743ee2','purple', '#ffa3ef', 'light-blue']
 					})
 				}
 
 
 				$(".grid").fadeIn()
-				var grid = new Muuri('.grid', {
+				grid = new Muuri('.grid', {
 					dragEnabled: true,
-					layoutOnInit: false
+					layoutOnInit: false,
+					dragStartPredicate: {
+						handle: '.octicon-three-bars'
+					}
 				}).on('move', function () {
 					saveLayout(grid)
 				});
@@ -493,8 +497,106 @@ class Dashboard {
 
 					}
 				})
+
+				// const datatable = new DataTable('#datatable', {
+				// 	columns: ['Name', 'Position', 'Salary'],
+				// 	data: [
+				// 	  ['Faris', 'Software Developer', '$1200'],
+				// 	  ['Manas', 'Software Engineer', '$1400'],
+				// 	]
+				//   });
 				// setTimeout(function () {charts.forEach(chart =>{ chart.draw(!0)})}, 2);
 			// });
 		// })
 	}
 }
+
+// iot.SupportAnalytics = frappe.views.GridReportWithPlot.extend({
+// 	init: function(wrapper) {
+// 		this._super({
+// 			title: __("Support Analtyics"),
+// 			parent: $(wrapper).find('.layout-main'),
+// 			page: wrapper.page,
+// 			doctypes: ["Issue", "Fiscal Year"],
+// 		});
+// 	},
+
+// 	filters: [
+// 		{fieldname: "fiscal_year", fieldtype:"Select", label: __("Fiscal Year"), link:"Fiscal Year",
+// 			default_value: __("Select Fiscal Year") + "..."},
+// 		{fieldname: "from_date", fieldtype:"Date", label: __("From Date")},
+// 		{fieldname: "to_date", fieldtype:"Date", label: __("To Date")},
+// 		{fieldname: "range", fieldtype:"Select", label: __("Range"),
+// 			options:["Daily", "Weekly", "Monthly", "Quarterly", "Yearly"], default_value: "Monthly"}
+// 	],
+
+// 	init_filter_values: function() {
+// 		this._super();
+// 		this.filter_inputs.range.val('Monthly');
+// 	},
+
+// 	setup_columns: function() {
+// 		var std_columns = [
+// 			{id: "name", name: __("Status"), field: "name", width: 100},
+// 		];
+// 		this.make_date_range_columns();
+// 		this.columns = std_columns.concat(this.columns);
+// 	},
+
+// 	prepare_data: function() {
+// 		// add Opening, Closing, Totals rows
+// 		// if filtered by account and / or voucher
+// 		var me = this;
+// 		var total_tickets = {name:"All Tickets", "id": "d-tickets",
+// 			checked:true};
+// 		var days_to_close = {name:"Days to Close", "id":"days-to-close",
+// 			checked:false};
+// 		var total_closed = {};
+// 		var hours_to_close = {name:"Hours to Close", "id":"hours-to-close",
+// 			checked:false};
+// 		var hours_to_respond = {name:"Hours to Respond", "id":"hours-to-respond",
+// 			checked:false};
+// 		var total_responded = {};
+
+
+// 		$.each(frappe.report_dump.data["Issue"], function(i, d) {
+// 			var dateobj = frappe.datetime.str_to_obj(d.creation);
+// 			var date = d.creation.split(" ")[0];
+// 			var col = me.column_map[date];
+// 			if(col) {
+// 				total_tickets[col.field] = flt(total_tickets[col.field]) + 1;
+// 				if(d.status=="Closed") {
+// 					// just count
+// 					total_closed[col.field] = flt(total_closed[col.field]) + 1;
+
+// 					days_to_close[col.field] = flt(days_to_close[col.field])
+// 						+ frappe.datetime.get_diff(d.resolution_date, d.creation);
+
+// 					hours_to_close[col.field] = flt(hours_to_close[col.field])
+// 						+ frappe.datetime.get_hour_diff(d.resolution_date, d.creation);
+
+// 				}
+// 				if (d.first_responded_on) {
+// 					total_responded[col.field] = flt(total_responded[col.field]) + 1;
+
+// 					hours_to_respond[col.field] = flt(hours_to_respond[col.field])
+// 						+ frappe.datetime.get_hour_diff(d.first_responded_on, d.creation);
+// 				}
+// 			}
+// 		});
+
+// 		// make averages
+// 		$.each(this.columns, function(i, col) {
+// 			if(col.formatter==me.currency_formatter && total_tickets[col.field]) {
+// 				days_to_close[col.field] = flt(days_to_close[col.field]) /
+// 					flt(total_closed[col.field]);
+// 				hours_to_close[col.field] = flt(hours_to_close[col.field]) /
+// 					flt(total_closed[col.field]);
+// 				hours_to_respond[col.field] = flt(hours_to_respond[col.field]) /
+// 					flt(total_responded[col.field]);
+// 			}
+// 		})
+
+// 		this.data = [total_tickets, days_to_close, hours_to_close, hours_to_respond];
+// 	}
+// });
