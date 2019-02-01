@@ -34,11 +34,11 @@ def get_data(from_date, to_date, node, signal):
 			continue
 		label.append(r['key_as_string'])
 		data.append([r['key_as_string'], int(r['max_output1']['value']), int(r['max_output2']['value'])])
-		# if t.hour == t_end_shift1.hour and abs(t.minute - t_end_shift1.minute) < 2:
+		# if t.hour == t_start_shift1.hour and abs(t.minute - t_start_shift1.minute) < 2:
         # 	data.append([r['key_as_string'], r['max_output1']['value'], r['max_output2']['value'],])
-		# elif t.hour == t_end_shift2.hour and abs(t.minute - t_end_shift2.minute) < 2:
+		# elif t.hour == t_start_shift2.hour and abs(t.minute - t_start_shift2.minute) < 2:
 
-		# elif t.hour == t_end_shift3.hour and abs(t.minute - t_end_shift3.minute) < 2:
+		# elif t.hour == t_start_shift3.hour and abs(t.minute - t_start_shift3.minute) < 2:
 	print(data)
 	return label, data
 
@@ -50,9 +50,9 @@ def get_data2(from_date, to_date, node, signal):
 	res = res['aggregations']['machine_performance']['buckets']
 	wss = frappe.get_doc("Work Shift Settings")
 
-	t_end_shift1 = datetime.strptime(wss.shift_1_end, "%H:%M:%S").time()
-	t_end_shift2 = datetime.strptime(wss.shift_2_end, "%H:%M:%S").time()
-	t_end_shift3 = datetime.strptime(wss.shift_3_end, "%H:%M:%S").time()
+	t_start_shift1 = datetime.strptime(wss.shift_1_start, "%H:%M:%S").time()
+	t_start_shift2 = datetime.strptime(wss.shift_2_start, "%H:%M:%S").time()
+	t_start_shift3 = datetime.strptime(wss.shift_3_start, "%H:%M:%S").time()
 
 	label, data, d, avail = [], [], {}, {}
 
@@ -67,21 +67,20 @@ def get_data2(from_date, to_date, node, signal):
 
 		if date_str not in d:
 			d[date_str] = [0, 0, 0, 0.0]
-			avail[date_str] = [0, 0] # helper to averaging availability
+			avail[date_str] = 0 # helper to averaging availability
 
 		# Averaging Availibility,
-		avail[date_str][0] += 1
-		avail[date_str][1] += float(r['avg_pm_on1']['value'])
-		d[date_str][3] = round( avail[date_str][1] / avail[date_str][0] ,2 )
+		avail[date_str] += float(r['avg_pm_on1']['value'])
+		d[date_str][3] = round( avail[date_str] / 3 ,2 ) # 3 is the shift sum is 3
 
 
-		if get_time_delta(t.time(), t_end_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)
+		if get_time_delta(t.time(), t_start_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)
 			d[date_str][0] = int(r['pm_output']['value'])
 			# print('shift 1: ' +  str(r['pm_output']['value']))
-		elif get_time_delta(t.time(), t_end_shift2) < 2:
+		elif get_time_delta(t.time(), t_start_shift2) < 2:
 			d[date_str][1] = int(r['pm_output']['value'])
 			# print('shift 2: ' +  str(r['pm_output']['value']))
-		elif get_time_delta(t.time(), t_end_shift3) > 86280 or get_time_delta(t.time(), t_end_shift3) < 2: # 86280 = 23 hours*3600 + 58 min* 60
+		elif get_time_delta(t.time(), t_start_shift3) > 86280 or get_time_delta(t.time(), t_start_shift3) < 2: # 86280 = 23 hours*3600 + 58 min* 60
 			if date_str not in d:
 				d[date_str] = [0, 0, 0]
 			d[date_str][2] = int(r['pm_output']['value'])
