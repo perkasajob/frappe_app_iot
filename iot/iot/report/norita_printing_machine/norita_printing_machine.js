@@ -73,6 +73,7 @@ frappe.query_reports["Norita Printing Machine"] = {
 	// "parent_field": "parent_account",
 	// "initial_depth": 3,
 	onload: function(report) {
+		adjustScrollbarWidth();
 		// report.page.add_inner_button(__("Test Button"), function() {
 		// 	var filters = report.get_values();
 			// frappe.set_route('query-report', 'Accounts Payable', {company: filters.company});
@@ -100,3 +101,13 @@ frappe.query_reports["Norita Printing Machine"] = {
 
 	}
 }
+
+function adjustScrollbarWidth(){
+	setTimeout(function(){
+	   if($(".dt-scrollable").length)
+		   $(".dt-scrollable").width($(".dt-scrollable").width()+15);
+	   else
+		  adjustScrollbarWidth()
+
+	},500)
+ }
