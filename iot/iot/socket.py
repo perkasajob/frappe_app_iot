@@ -10,7 +10,6 @@ def on_message_received(message):
     try:
         msg = json.loads(message)
     except Exception as e:
-        print e
         return
 
 
@@ -21,7 +20,6 @@ sc = ServerConnection( \
     'alpha_server',\
     frappe.get_conf().get("iot_alpha_topic") ,\
     'alpha_server', False)
-print "Connecting ..................................................."
 sc.bindResponseMsg(on_message_received)
 
 

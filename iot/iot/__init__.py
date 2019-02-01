@@ -36,13 +36,11 @@ def registerNode(**args):
 @frappe.whitelist(allow_guest=True)
 def getNode(node_id):
     node = frappe.get_doc("Node", node_id)
-    print node
     return node
 
 @frappe.whitelist(allow_guest=True)
 def getNodes():
     node = frappe.get_all("Node")
-    print node
     return node
 
 def convert2sqlite3Type(estype):
@@ -73,7 +71,7 @@ def parseSignalScalingFloat(val):
         try:
             signalScaling = float(val)
         except ValueError:
-            print val +" : Not a float"
+            print(val +" : Not a float")
     return signalScaling
 
 
