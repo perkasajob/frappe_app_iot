@@ -71,7 +71,7 @@ def get_data2(from_date, to_date, node, signal):
 
 		# Averaging Availibility,
 		avail[date_str] += float(r['avg_pm_on1']['value'])
-		d[date_str][3] = round( avail[date_str] / 3 ,2 ) # 3 is the shift sum is 3
+		d[date_str][3] = round( avail[date_str]*100 / 3 ,1 ) # 3 is the shift sum is 3
 
 
 		if get_time_delta(t.time(), t_start_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)
