@@ -55,6 +55,7 @@ def get_data2(from_date, to_date, node, signal):
 	t_start_shift3 = datetime.strptime(wss.shift_3_start, "%H:%M:%S").time()
 
 	label, data, d, avail = [], [], {}, {}
+	timespan = 8*60 # in minutes since the speed is in minutes
 
 
 	for r in res:
@@ -75,15 +76,15 @@ def get_data2(from_date, to_date, node, signal):
 
 
 		if get_time_delta(t.time(), t_start_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)
-			d[date_str][0] = int(r['pm_output']['value'])
+			d[date_str][0] = int(r['pm_output']['value'])*timespan
 			# print('shift 1: ' +  str(r['pm_output']['value']))
 		elif get_time_delta(t.time(), t_start_shift2) < 2:
-			d[date_str][1] = int(r['pm_output']['value'])
+			d[date_str][1] = int(r['pm_output']['value'])*timespan
 			# print('shift 2: ' +  str(r['pm_output']['value']))
 		elif get_time_delta(t.time(), t_start_shift3) > 86280 or get_time_delta(t.time(), t_start_shift3) < 2: # 86280 = 23 hours*3600 + 58 min* 60
 			if date_str not in d:
 				d[date_str] = [0, 0, 0]
-			d[date_str][2] = int(r['pm_output']['value'])
+			d[date_str][2] = int(r['pm_output']['value'])*timespan
 			# print('shift 3: ' +  str(r['pm_output']['value']))
 
 
