@@ -73,7 +73,6 @@ frappe.query_reports["Norita Printing Machine"] = {
 	// "parent_field": "parent_account",
 	// "initial_depth": 3,
 	onload: function(report) {
-		adjustScrollbarWidth();
 		// report.page.add_inner_button(__("Test Button"), function() {
 		// 	var filters = report.get_values();
 			// frappe.set_route('query-report', 'Accounts Payable', {company: filters.company});
@@ -115,3 +114,5 @@ function adjustScrollbarWidth(){
 
 	},500)
  }
+
+ $(".dt-scrollable").ready(adjustScrollbarWidth);
