@@ -11,7 +11,7 @@ from frappe.utils import getdate, cstr, flt
 from frappe.utils import (convert_utc_to_user_timezone, now)
 
 def execute(filters=None):
-	columns, data = ['Date','Shift 1', 'Shift 2', 'Shift 3'], []
+	columns, data = ['Date','Shift 1', 'Shift 2', 'Shift 3', 'Avail(%)'], []
 	from_date, to_date = getdate(filters.from_date), getdate(filters.to_date)
 
 	label, data = get_data2(from_date, to_date, filters.node, filters.signal)
@@ -21,7 +21,7 @@ def execute(filters=None):
 def get_data(from_date, to_date, node, signal):
 	site_name = cstr(frappe.local.site)
 	es = Elasticsearch([frappe.get_conf().get("elastic_norita_server")],scheme="https", port=443)
-	doc = {"size":0,"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.PM1_Line_Speed"}}}}}}
+	doc = {"size":0,"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"pm_output":{"max":{"field":"192_168_1_128.PM1_Line_Speed"}}}}}}
 	res = es.search(index=site_name, body=doc)
 	res = res['aggregations']['machine_performance']['buckets']
 	wss = frappe.get_doc("Work Shift Settings")
@@ -44,12 +44,11 @@ def get_data(from_date, to_date, node, signal):
 
 def get_data2(from_date, to_date, node, signal):
 	es = Elasticsearch([frappe.get_conf().get("elastic_norita_server")],scheme="https", port=443)
-	doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.PM1_Line_Speed"}}}}}}
+	# doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.PM1_Line_Speed"}}}}}}
+	doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":"2019-01-01","lte":"2019-01-30","format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"avg_output1":{"avg":{"field":"192_168_1_128.PM1_Line_Speed"}},"avg_pm_on1":{"avg":{"field":"192_168_1_128.PM1_Machine_On"}},"pm_output":{"bucket_script":{"buckets_path":{"tavg_output1":"avg_output1","tavg_pm_on1":"avg_pm_on1"},"script":"params.tavg_output1 * params.tavg_pm_on1"}}}}}}
 	res = es.search(index="norita", body=doc)
 	res = res['aggregations']['machine_performance']['buckets']
 	wss = frappe.get_doc("Work Shift Settings")
-
-	print(res)
 
 	t_end_shift1 = datetime.strptime(wss.shift_1_end, "%H:%M:%S").time()
 	t_end_shift2 = datetime.strptime(wss.shift_2_end, "%H:%M:%S").time()
@@ -57,8 +56,10 @@ def get_data2(from_date, to_date, node, signal):
 
 	label, data, d = [], [], {}
 
+
 	for r in res:
-		if r['max_output1']['value'] == None:
+		print(r)
+		if r['avg_pm_on1']['value'] == None:
 			continue
 
 		utc_dt = datetime.utcfromtimestamp(r['key']/1000 - 1)
@@ -66,19 +67,20 @@ def get_data2(from_date, to_date, node, signal):
 		date_str = t.strftime('%y-%m-%d')
 
 		if date_str not in d:
-			d[date_str] = [0, 0, 0]
+			d[date_str] = [0, 0, 0, 0.0]
 
 		if get_time_delta(t.time(), t_end_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)
-			d[date_str][0] = int(r['max_output1']['value'])
-			# print('shift 1: ' +  str(r['max_output1']['value']))
+			d[date_str][0] = int(r['pm_output']['value'])
+			# print('shift 1: ' +  str(r['pm_output']['value']))
 		elif get_time_delta(t.time(), t_end_shift2) < 2:
-			d[date_str][1] = int(r['max_output1']['value'])
-			# print('shift 2: ' +  str(r['max_output1']['value']))
+			d[date_str][1] = int(r['pm_output']['value'])
+			# print('shift 2: ' +  str(r['pm_output']['value']))
 		elif get_time_delta(t.time(), t_end_shift3) > 86280 or get_time_delta(t.time(), t_end_shift3) < 2: # 86280 = 23 hours*3600 + 58 min* 60
 			if date_str not in d:
 				d[date_str] = [0, 0, 0]
-			d[date_str][2] = int(r['max_output1']['value'])
-			print('shift 3: ' +  str(r['max_output1']['value']))
+			d[date_str][2] = int(r['pm_output']['value'])
+			print('shift 3: ' +  str(r['pm_output']['value']))
+		d[date_str][3] = round(float(r['avg_pm_on1']['value']), 2)
 
 	od = collections.OrderedDict(sorted(d.items()))
 

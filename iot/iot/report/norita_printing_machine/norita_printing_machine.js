@@ -94,6 +94,10 @@ frappe.query_reports["Norita Printing Machine"] = {
 				{
 					name: 'Shift 3',
 					values: result.map(d => d[3])
+				},
+				{
+					name: 'Avail(%)',
+					values: result.map(d => d[4])
 				}]
 			},
 			type: 'bar',
