@@ -54,11 +54,10 @@ def get_data2(from_date, to_date, node, signal):
 	t_end_shift2 = datetime.strptime(wss.shift_2_end, "%H:%M:%S").time()
 	t_end_shift3 = datetime.strptime(wss.shift_3_end, "%H:%M:%S").time()
 
-	label, data, d = [], [], {}
+	label, data, d, avail = [], [], {}, {}
 
 
 	for r in res:
-		print(r)
 		if r['avg_pm_on1']['value'] == None:
 			continue
 
@@ -68,6 +67,13 @@ def get_data2(from_date, to_date, node, signal):
 
 		if date_str not in d:
 			d[date_str] = [0, 0, 0, 0.0]
+			avail[date_str] = [0, 0] # helper to averaging availability
+
+		# Averaging Availibility,
+		avail[date_str][0] += 1
+		avail[date_str][1] += float(r['avg_pm_on1']['value'])
+		d[date_str][3] = round( avail[date_str][1] / avail[date_str][0] ,2 )
+
 
 		if get_time_delta(t.time(), t_end_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)
 			d[date_str][0] = int(r['pm_output']['value'])
@@ -79,8 +85,8 @@ def get_data2(from_date, to_date, node, signal):
 			if date_str not in d:
 				d[date_str] = [0, 0, 0]
 			d[date_str][2] = int(r['pm_output']['value'])
-			print('shift 3: ' +  str(r['pm_output']['value']))
-		d[date_str][3] = round(float(r['avg_pm_on1']['value']), 2)
+			# print('shift 3: ' +  str(r['pm_output']['value']))
+
 
 	od = collections.OrderedDict(sorted(d.items()))
 
