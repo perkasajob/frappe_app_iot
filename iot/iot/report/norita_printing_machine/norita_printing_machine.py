@@ -11,7 +11,7 @@ from frappe.utils import getdate, cstr, flt
 from frappe.utils import (convert_utc_to_user_timezone, now)
 
 def execute(filters=None):
-	columns, data = ['Date','Shift 1', 'Shift 2', 'Shift 3', 'Avail(%)', 'Perf(%)'], []
+	columns, data = ['Date','Shift 1', 'Shift 2', 'Shift 3', 'Avail(%)', 'Perf(%)', "OEE(%)"], []
 	from_date, to_date = getdate(filters.from_date), getdate(filters.to_date)
 	if filters.mOnOff and filters.speed:
 		label, data = get_data2(from_date, to_date, filters.node, filters.speed, filters.mOnOff)
@@ -49,13 +49,6 @@ def get_data2(from_date, to_date, node, speed, mOnOff):
 	sg_mOnOff = frappe.get_all("Signal",filters={"parent":node, "label":mOnOff}, fields=['ip'] )[0]
 	sg_speed_str = sg_speed.ip.replace('.','_') + '.' + speed.replace(" ", "_")
 	sg_mOnOff_str = sg_mOnOff.ip.replace('.','_') + '.' + mOnOff.replace(" ", "_")
-	print('###########################################################')
-	print('node : ' + node)
-	print('speed : ' + speed)
-	print('mOnOff : ' + mOnOff)
-	print(sg_speed_str)
-	print(sg_mOnOff_str)
-	print('###########################################################')
 
 	es = Elasticsearch([frappe.get_conf().get("elastic_norita_server")],scheme="https", port=443)
 	# doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.PM1_Line_Speed"}}}}}}
@@ -81,7 +74,7 @@ def get_data2(from_date, to_date, node, speed, mOnOff):
 		date_str = t.strftime('%y-%m-%d')
 
 		if date_str not in d:
-			d[date_str] = [0, 0, 0, 0.0, 0.0]
+			d[date_str] = [0, 0, 0, 0.0, 0.0, 0.0]
 			avail[date_str] = 0 # helper to averaging availability
 			perf[date_str] = 0
 
@@ -90,6 +83,7 @@ def get_data2(from_date, to_date, node, speed, mOnOff):
 		perf[date_str] += float(r['avg_output1']['value'])
 		d[date_str][3] = round( avail[date_str]*100 / 3 ,1 ) # 3 is the shift sum is 3
 		d[date_str][4] = round( perf[date_str]*100/sg_speed.max/3 , 1)
+		d[date_str][5] = round( d[date_str][3]*d[date_str][4]/100 , 2) # OEE without defects calculation, divide by 100 to compensate one of percentage
 
 
 		if get_time_delta(t.time(), t_start_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)

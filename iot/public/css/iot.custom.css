@@ -313,7 +313,7 @@
 
   .led{
     width: 25px;
-    height: 25px;
+    height: 28px;
     border-radius: 50%;
     border: 2px solid darkgrey;
   }

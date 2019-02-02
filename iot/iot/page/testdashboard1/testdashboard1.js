@@ -24,6 +24,7 @@ const clientId = frappe.session.user_fullname+uuidv4();
 const username = frappe.session.user
 let configs={};
 var charts = []
+let charts_len = []
 let chartDataset = []
 var gauges = []
 var texts = []
@@ -32,7 +33,6 @@ var dials = []
 var switches = []
 var rtdata = {}
 let viz_group = []
-let chartPtNr = 10
 let dataId = 0
 let data=[]
 let nodeId = ''
@@ -135,7 +135,7 @@ function loadLayout(grid, serializedLayout) {
 
 function chartsRedraw(charts, chartData){
 	for (let key in chartData){
-		if(chartData[key].labels.length > chartPtNr){
+		if(chartData[key].labels.length > charts_len[key]){
 			chartData[key].labels.shift()
 			chartData[key].datasets.map(dataset =>{
 				return dataset.values.shift()
@@ -433,9 +433,15 @@ class Dashboard {
 
 				for( let key in charts){
 					let datasets = []
+					let chart_buf_len = 5
+					let y_min = 0
 					configs.signal.forEach(signal => {
 						if(signal.visualization === 'chart' && signal.viz_group === key ){
 							datasets.push({name: signal.label + '('+ signal.unit +')', type: 'line', values: [] })
+							if (chart_buf_len < signal.chart_buf_len)
+								chart_buf_len = signal.chart_buf_len
+							if(y_min > signal.min)
+								y_min = signal.min
 						}
 					})
 
@@ -443,11 +449,13 @@ class Dashboard {
 						configs.signal.forEach(signal => {
 							if(signal.visualization === 'chart' && !signal.viz_group && signal.label === key){
 								datasets.push({name: signal.label + '('+ signal.unit +')', type: 'line', values: [] })
+								chart_buf_len = signal.chart_buf_len
+								y_min = signal.min
 							}
 						})
 					}
 
-
+					charts_len[key] = chart_buf_len
 					charts[key] = new Chart('#chart'+key.replace(/\s/g,''),{
 						lineOptions: {
 							hideDots: 0 // default: 0
@@ -455,6 +463,13 @@ class Dashboard {
 						data: {
 							labels: [],
 							datasets: datasets,
+							yMarkers: [
+								{
+									label: '',
+									value: y_min,
+									type: 'solid'
+								}
+							],
 							type: 'axis-mixed', // or 'bar', 'line', 'scatter', 'pie', 'percentage'
 							height: 300,
 						},
