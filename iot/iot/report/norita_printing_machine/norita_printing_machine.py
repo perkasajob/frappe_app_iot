@@ -11,10 +11,10 @@ from frappe.utils import getdate, cstr, flt
 from frappe.utils import (convert_utc_to_user_timezone, now)
 
 def execute(filters=None):
-	columns, data = ['Date','Shift 1', 'Shift 2', 'Shift 3', 'Avail(%)'], []
+	columns, data = ['Date','Shift 1', 'Shift 2', 'Shift 3', 'Avail(%)', 'Perf(%)'], []
 	from_date, to_date = getdate(filters.from_date), getdate(filters.to_date)
-
-	label, data = get_data2(from_date, to_date, filters.node, filters.signal)
+	if filters.mOnOff and filters.speed:
+		label, data = get_data2(from_date, to_date, filters.node, filters.speed, filters.mOnOff)
 
 	return columns, data
 
@@ -42,11 +42,25 @@ def get_data(from_date, to_date, node, signal):
 	print(data)
 	return label, data
 
-def get_data2(from_date, to_date, node, signal):
+def get_data2(from_date, to_date, node, speed, mOnOff):
+	speed = speed.replace(",","").strip()
+	mOnOff = mOnOff.replace(",","").strip()
+	sg_speed = frappe.get_all("Signal",filters={"parent":node, "label":speed}, fields=['ip','min' ,'max'] )[0]
+	sg_mOnOff = frappe.get_all("Signal",filters={"parent":node, "label":mOnOff}, fields=['ip'] )[0]
+	sg_speed_str = sg_speed.ip.replace('.','_') + '.' + speed.replace(" ", "_")
+	sg_mOnOff_str = sg_mOnOff.ip.replace('.','_') + '.' + mOnOff.replace(" ", "_")
+	print('###########################################################')
+	print('node : ' + node)
+	print('speed : ' + speed)
+	print('mOnOff : ' + mOnOff)
+	print(sg_speed_str)
+	print(sg_mOnOff_str)
+	print('###########################################################')
+
 	es = Elasticsearch([frappe.get_conf().get("elastic_norita_server")],scheme="https", port=443)
 	# doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.PM1_Line_Speed"}}}}}}
-	doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"avg_output1":{"avg":{"field":"192_168_1_128.PM1_Line_Speed"}},"avg_pm_on1":{"avg":{"field":"192_168_1_128.PM1_Machine_On"}},"pm_output":{"bucket_script":{"buckets_path":{"tavg_output1":"avg_output1","tavg_pm_on1":"avg_pm_on1"},"script":"params.tavg_output1 * params.tavg_pm_on1"}}}}}}
-	res = es.search(index="norita", body=doc)
+	query = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"avg_output1":{"avg":{"field":sg_speed_str}},"avg_pm_on1":{"avg":{"field":sg_mOnOff_str}},"pm_output":{"bucket_script":{"buckets_path":{"tavg_output1":"avg_output1","tavg_pm_on1":"avg_pm_on1"},"script":"params.tavg_output1 * params.tavg_pm_on1"}}}}}}
+	res = es.search(index="norita", body=query)
 	res = res['aggregations']['machine_performance']['buckets']
 	wss = frappe.get_doc("Work Shift Settings")
 
@@ -54,7 +68,7 @@ def get_data2(from_date, to_date, node, signal):
 	t_start_shift2 = datetime.strptime(wss.shift_2_start, "%H:%M:%S").time()
 	t_start_shift3 = datetime.strptime(wss.shift_3_start, "%H:%M:%S").time()
 
-	label, data, d, avail = [], [], {}, {}
+	label, data, d, avail, perf = [], [], {}, {}, {}
 	timespan = 8*60 # in minutes since the speed is in minutes
 
 
@@ -67,12 +81,15 @@ def get_data2(from_date, to_date, node, signal):
 		date_str = t.strftime('%y-%m-%d')
 
 		if date_str not in d:
-			d[date_str] = [0, 0, 0, 0.0]
+			d[date_str] = [0, 0, 0, 0.0, 0.0]
 			avail[date_str] = 0 # helper to averaging availability
+			perf[date_str] = 0
 
 		# Averaging Availibility,
 		avail[date_str] += float(r['avg_pm_on1']['value'])
+		perf[date_str] += float(r['avg_output1']['value'])
 		d[date_str][3] = round( avail[date_str]*100 / 3 ,1 ) # 3 is the shift sum is 3
+		d[date_str][4] = round( perf[date_str]*100/sg_speed.max/3 , 1)
 
 
 		if get_time_delta(t.time(), t_start_shift1) < 2 : #and (t_old.tm_mon != t.tm_mon or t_old.tm_mday != t.tm_mday or t_old.tm_year != t.tm_year)

@@ -29,16 +29,15 @@ frappe.query_reports["Norita Printing Machine"] = {
 					"doctype": "Node"
 
 				}
-			}
+			},
 		},{
-			"fieldname":"signal",
-			"label": __("Signal"),
+			"fieldname":"speed",
+			"label": __("Speed"),
 			"fieldtype": "MultiSelect",
 			get_data: function() {
 				let node = $(":input[data-fieldname='node']").val()
-				console.log('node : ' + node)
 				if (!node)
-					return
+					return []
 				// var projects = frappe.query_report.get_filter_value("project") || "";
 
 				// const values = projects.split(/\s*,\s*/).filter(d => d);
@@ -51,12 +50,13 @@ frappe.query_reports["Norita Printing Machine"] = {
 					async: false,
 					no_spinner: true,
 					args: {
-						'node_id': node
+						node_id: node
 					},
 					callback: function(r) {
 						if(r){
 							for(let i=0; i < r.message.length; i++){
-								data.push(r.message[i].ip+'.'+r.message[i].label)
+								if(r.message[i].data_type != 'byte')
+									data.push(r.message[i].label)
 							}
 						}
 						if (!r.exc) {
@@ -65,7 +65,44 @@ frappe.query_reports["Norita Printing Machine"] = {
 					}
 				});
 				return data;
-			}
+			},
+		},{
+			"fieldname":"mOnOff",
+			"label": __("M On/Off"),
+			"fieldtype": "MultiSelect",
+			get_data: function() {
+				let node = $(":input[data-fieldname='node']").val()
+				// node = frappe.query_report.get_filter_value("node") || "";
+				if (!node)
+					return []
+				// var projects = frappe.query_report.get_filter_value("project") || "";
+
+				// const values = projects.split(/\s*,\s*/).filter(d => d);
+				// const txt = projects.match(/[^,\s*]*$/)[0] || '';
+				let data = [];
+
+				frappe.call({
+					type: "GET",
+					method:'iot.iot.getSignalList',
+					async: false,
+					no_spinner: true,
+					args: {
+						node_id: node,
+					},
+					callback: function(r) {
+						if(r){
+							for(let i=0; i < r.message.length; i++){
+								if(r.message[i].data_type == 'byte')
+									data.push(r.message[i].label)
+							}
+						}
+						if (!r.exc) {
+							// code snippet
+						}
+					}
+				});
+				return data;
+			},
 		},
 	],
 	// "tree": true,
@@ -77,6 +114,9 @@ frappe.query_reports["Norita Printing Machine"] = {
 		// 	var filters = report.get_values();
 			// frappe.set_route('query-report', 'Accounts Payable', {company: filters.company});
 		// });
+	},
+	refresh: function(report){
+		$(".dt-scrollable").ready(adjustScrollbarWidth);
 	},
 	get_chart_data: function(columns, result) {
 		return {

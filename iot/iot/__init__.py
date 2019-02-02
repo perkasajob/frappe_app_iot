@@ -258,14 +258,12 @@ def getESIndex(node_id):
 
 
 
-@frappe.whitelist(allow_guest=True)
+@frappe.whitelist()
 def getSignalList(node_id):
-    print("++++++++++++++++++++")
-    print(node_id)
     node = frappe.get_doc("Node", node_id)
     data = []
     for signal in node.signal:
-        data.append({'label': signal.label.replace(" ", "_"), 'ip': signal.ip.replace(".", "_")})
+        data.append({'label': signal.label, 'ip': signal.ip.replace(".", "_"), "data_type": signal.data_type})
     return data
 
 
