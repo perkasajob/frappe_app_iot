@@ -18,6 +18,6 @@ def get_data():
 			"icon": "octicon octicon-graph",
 			"type": "page",
 			"link": "testdashboard1",
-			"label": _("Dashboard1")
+			"label": _("Dashboard")
 		}
 	]
