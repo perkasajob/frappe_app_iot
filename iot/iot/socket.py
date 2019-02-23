@@ -14,13 +14,13 @@ def on_message_received(message):
 
 
 #os.environ.get('IOT_SERVER')
-sc = ServerConnection( \
-    frappe.get_conf().get("iot_server"),\
-    os.path.dirname(os.path.realpath(__file__))+'/root-CA.crt',
-    'alpha_server',\
-    frappe.get_conf().get("iot_alpha_topic") ,\
-    'alpha_server', False)
-sc.bindResponseMsg(on_message_received)
+# sc = ServerConnection( \
+#     frappe.get_conf().get("iot_server"),\
+#     os.path.dirname(os.path.realpath(__file__))+'/root-CA.crt',
+#     'alpha_server',\
+#     frappe.get_conf().get("iot_alpha_topic") ,\
+#     'alpha_server', False)
+# sc.bindResponseMsg(on_message_received)
 
 
 def update_device_config(doc, method):
