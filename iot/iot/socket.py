@@ -26,7 +26,7 @@ sc.bindResponseMsg(on_message_received)
 def update_device_config(doc, method):
     # print('############### IOT ##########  ' +  os.environ.get('IOT_SERVER'))
     print(doc.name + " -----" + doc.topic +" the name")
-    sc.publishValue({"cmd": 'update_config'}, topic=doc.topic + '/cmd/' + doc.name)
+    #sc.publishValue({"cmd": 'update_config'}, topic=doc.topic + '/cmd/' + doc.name)
     # frappe.publish_realtime('msgprint', os.environ.get('IOT_SERVER'))
 
 def ping_device(doc, method):
