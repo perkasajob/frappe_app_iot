@@ -24,8 +24,8 @@ def execute(filters=None):
 
 def get_data(from_date, to_date, node, signal):
 	site_name = cstr(frappe.local.site)
-	print("#####################################################################")
-	print(site_name)
+	# print("#####################################################################")
+	# print(site_name)
 	signal = signal.replace(",","").strip()
 	sg_signal = frappe.get_all("Signal",filters={"parent":node, "label":signal}, fields=['ip','min' ,'max'] )[0]
 	sg_signal_str = sg_signal.ip.replace('.','_') + '.' + signal.replace(" ", "_")

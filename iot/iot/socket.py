@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import msgprint
 import requests, json, pdb, os
-from broker import ServerConnection
+# from broker import ServerConnection
 
 
 def on_message_received(message):
