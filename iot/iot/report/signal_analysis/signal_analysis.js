@@ -85,6 +85,12 @@ frappe.query_reports["Signal Analysis"] = {
 				datasets: [{
 					name: 'Avg',
 					values: result.map(d => d[1])
+				},{
+					name: 'Min',
+					values: result.map(d => d[2])
+				},{
+					name: 'Max',
+					values: result.map(d => d[3])
 				}]
 			},
 			type: 'line',

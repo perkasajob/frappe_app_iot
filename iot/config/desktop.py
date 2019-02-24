@@ -17,7 +17,7 @@ def get_data():
 			"color": "#DAAD86",
 			"icon": "octicon octicon-graph",
 			"type": "page",
-			"link": "testdashboard1",
+			"link": "dashboard_rt",
 			"label": _("Dashboard")
 		}
 	]

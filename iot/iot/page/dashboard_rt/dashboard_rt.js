@@ -1,9 +1,9 @@
 
 // import DataTable from 'frappe-datatable';
 // frappe.provide("frappe.report_dump");
-frappe.provide('iot.testdashboard1');
+frappe.provide('iot.dashboard_rt');
 frappe.provide("frappe.views");
-// { % include 'iot/iot/page/testdashboard1/mydatatable.js' %   }
+// { % include 'iot/iot/page/dashboard_rt/mydatatable.js' %   }
 // import RealtimeClient from '/public/js/RealtimeClient';
 
 // var mqtt = frappe.require('https://unpkg.com/mqtt/dist/mqtt.min.js')
@@ -11,7 +11,7 @@ frappe.provide("frappe.views");
 // {"192_168_1_128":{"PM1_Machine_On":1,"PM1_Line_Speed":34,"PM1_Machine_Run":0},"id":1547106914466,"name":"PrintingMachine"}"
 // {"192_168_1_128":{"D1":10.53434,"D2":100.2324,"PM1_Line_Speed":86,"A0":20, "Motor_RPM":1000.3434, "Battery_Level":1500.35344},"id":1547106914466,"name":"PrintingMachine"}
 const LAST_WILL_TOPIC = 'last-will';
-const MESSAGE_TOPIC = 'Norita/db/#';
+let MESSAGE_TOPIC = 'Norita/db/#';
 const CLIENT_CONNECTED = 'client-connected';
 const CLIENT_DISCONNECTED = 'client-disconnected';
 const uuidv4 = () => {
@@ -152,6 +152,7 @@ function loadConfigs(wrapper, nodeId){
 		success: function(r){
 			if(r.data) {
 				console.log(r.data)
+				MESSAGE_TOPIC = r.data.topic + '/db/#'
 				if (nodeId){
 					configs = r.data
 					for(var i=0; i < configs.signal.length; i++ ){
@@ -159,6 +160,7 @@ function loadConfigs(wrapper, nodeId){
 						configs.signal[i].ip = configs.signal[i].ip.replace('.','_')
 						configs.signal[i].value = 0
 					}
+					connectRealtime();
 				} else{
 					nodes = r.data
 					if(nodes.length === 1)
@@ -167,26 +169,12 @@ function loadConfigs(wrapper, nodeId){
 			}
 		}
 	}).always(function() {
-		wrapper.setup = new iot.testdashboard1.SetupHelper(wrapper);
+		wrapper.setup = new iot.dashboard_rt.SetupHelper(wrapper);
 		window.cur_setup = wrapper.setup;
 	})
 }
 
-
-
-frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
-	page = frappe.ui.make_app_page({
-		parent: wrapper,
-		title: 'Dashboard',
-		single_column: true,
-		set_document_title: false
-	});
-
-	nodeId = getUrlVars(window.location.href)['node']
-	wrapper = wrapper
-
-	page.add_menu_item('Nodes', () => frappe.set_route('List','Node' ))
-
+function connectRealtime(){
 	client = RealtimeClient(clientId, username)
 	client.connect().then(() => {
 		client.onMessageReceived((topic, message) => {
@@ -246,13 +234,30 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 				}
 				chartsRedraw(charts, chartData)
 			}
-			console.log(topic+ " ==> "+ JSON.stringify(message))
+			// console.log(topic+ " ==> "+ JSON.stringify(message))
 		})
 		client.onDisconnect = (callback) => {
 			console.log("Connection got disconneted ")
 			setTimeout(function () {client.connect()}, 2)
 		}
 	})
+}
+
+
+
+frappe.pages['dashboard_rt'].on_page_load = function(wrapper) {
+	page = frappe.ui.make_app_page({
+		parent: wrapper,
+		title: 'Dashboard',
+		single_column: true,
+		set_document_title: false
+	});
+
+	nodeId = getUrlVars(window.location.href)['node']
+	wrapper = wrapper
+
+	page.add_menu_item('Nodes', () => frappe.set_route('List','Node' ))
+
 	if(!nodeId){
 		nodeId=''
 	}
@@ -262,7 +267,7 @@ frappe.pages['testdashboard1'].on_page_load = function(wrapper) {
 
 
 
-iot.testdashboard1.SetupHelper = class SetupHelper {
+iot.dashboard_rt.SetupHelper = class SetupHelper {
 	constructor(wrapper) {
 		this.wrapper = $(wrapper).find('.layout-main-section');
 		this.page = wrapper.page;
@@ -388,7 +393,7 @@ class Dashboard {
 			}
 		})
 
-		$(frappe.render_template('testdashboard1', {nodes:nodes })).appendTo(this.wrapper);
+		$(frappe.render_template('dashboard_rt', {nodes:nodes })).appendTo(this.wrapper);
 	}
 
 

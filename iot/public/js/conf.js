@@ -38,7 +38,7 @@ $(document).bind('toolbar_setup', function() {
 // $(document).on("page-change", function() {
 // 	$(function() {
 // 		if($("#dashboardIcon").length == 0 && window.location.pathname == '/desk')
-// 			$('#icon-grid').append('<div id="dashboardIcon" class="case-wrapper" data-name="Dashboard" data-link="testdashboard1" title="Dashboard"> <div class="app-icon" style="background-color: #5CDB95" title="Dashboard"><i class="octicon octicon-graph" title="Social" style=""></i></div> <div class="case-label ellipsis"> <div class="circle module-count-social" data-doctype="" style="display: none;"> <span class="circle-text"></span> </div>  <span class="case-label-text">Dashboard</span> </div> </div>')
+// 			$('#icon-grid').append('<div id="dashboardIcon" class="case-wrapper" data-name="Dashboard" data-link="dashboard_rt" title="Dashboard"> <div class="app-icon" style="background-color: #5CDB95" title="Dashboard"><i class="octicon octicon-graph" title="Social" style=""></i></div> <div class="case-label ellipsis"> <div class="circle module-count-social" data-doctype="" style="display: none;"> <span class="circle-text"></span> </div>  <span class="case-label-text">Dashboard</span> </div> </div>')
 // 	})
 // });
 
