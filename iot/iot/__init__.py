@@ -81,7 +81,7 @@ def getDeviceConfig(node_id):
     res = OrderedDict()
     node = frappe.get_doc("Node", node_id)
     for signal in node.signal:
-        dat = {'name' : signal.name, 'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': parseSignalScalingFloat(signal.scaling), 'offset': signal.offset }
+        dat = {'name' : signal.name, 'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': parseSignalScalingFloat(signal.scaling), 'offset': signal.offset, 'unit': signal.unit, 'min': signal.min, 'max': signal.max, 'alarm_min': signal.alarm_min, 'alarm_max': signal.alarm_max }
         if signal.ip in res: res[signal.ip].append(dat)
         else: res[signal.ip]= [dat]
 
@@ -138,7 +138,7 @@ def getPLCInterface(node_id):
     res = OrderedDict()
     node = frappe.get_doc("Node", node_id)
     for signal in node.signal:
-        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': signal.scaling}
+        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': signal.scaling, 'alarm_min': signal.alarm_min, 'alarm_max': signal.alarm_max}
         if signal.ip in res: res[signal.ip].append(dat)
         else: res[signal.ip]= [dat]
 
@@ -166,13 +166,19 @@ def getPLCInterfaceWithScaling(node_id):
     res = OrderedDict()
     node = frappe.get_doc("Node", node_id)
     for signal in node.signal:
-        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': signal.scaling, 'offset': signal.offset}
+        dat = {'type': signal.data_type, 'label': signal.label.replace(" ", "_"), 'rw': signal.rw, 'scaling': signal.scaling, 'offset': signal.offset, 'alarm_min': signal.alarm_min, 'alarm_max': signal.alarm_max}
         if signal.ip in res: res[signal.ip].append(dat)
         else: res[signal.ip]= [dat]
 
     for re in res:
         idx = {}
         strSignal = ''
+        idx_alarm = 0
+        for r in res[re]: # Alarms
+            strSignal += 'AlarmDebouncer_{}(TRUE, {}, {}, {}, T#200ms); '.format(idx_alarm, r['label'], r['alarm_max'], r['alarm_min'])
+            strSignal += 'alarms[{}] := AlarmDebouncer_{}.alarm; '.format(idx_alarm, idx_alarm)
+            idx_alarm += 1
+            # strSignal += 'TON_{}_min({}<{}, T#200ms);'.format(r['label'], r['label'], r['alarm_max'])
         for r in res[re]:
             estype = r['type']
 
