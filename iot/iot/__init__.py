@@ -5,7 +5,8 @@ from frappe.utils import nowdate
 from frappe import utils
 import json, requests
 from elasticsearch import Elasticsearch
-
+from frappe.utils import getdate, cstr, flt
+from iot.iot.connection import iotSendCommand, iotMPublish
 
 
 @frappe.whitelist(allow_guest=True)
@@ -129,6 +130,7 @@ def getDeviceConfig(node_id):
         "scan_interval": node.scan_interval,
         "send_trigger": node.send_trigger,
         "immediate_start": node.immediate_start,
+        "enable_alarms": node.enable_alarms,
         "time_offset" : node.time_offset  # microseconds
     }
 
@@ -290,3 +292,10 @@ def getProductionOutput():
     doc = {"size":0,"aggs":{"machine_performance":{"date_histogram":{"field":"id","interval":"8h","format":"yyyy-MM-dd HH:mm:ss","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.M1_Product_Output"}},"max_output2":{"max":{"field":"192_168_1_128.M2_Product_Output"}},"adder":{"bucket_script":{"buckets_path":{"tmax_output1":"max_output1","tmax_output2":"max_output2"},"script":"params.tmax_output1 + params.tmax_output2"}}}}}}
     res = es.search(index="lionwings", body=doc)
     return res
+
+@frappe.whitelist(allow_guest=True)
+def getCertificatePath(node_id):
+    payload= {"message": "Herzliche Grussen"}
+    return iotMPublish()
+
+    # return iotSendCommand(node_id, payload)

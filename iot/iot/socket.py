@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import frappe
 from frappe import msgprint
 import requests, json, pdb, os
-# from broker import ServerConnection
+from iot.iot.connection import iotSendCommand
 
 
 def on_message_received(message):
@@ -26,7 +26,7 @@ def on_message_received(message):
 def update_device_config(doc, method):
     # print('############### IOT ##########  ' +  os.environ.get('IOT_SERVER'))
     print(doc.name + " -----" + doc.topic +" the name")
-    #sc.publishValue({"cmd": 'update_config'}, topic=doc.topic + '/cmd/' + doc.name)
+    iotSendCommand(doc.name,'update_config')
     # frappe.publish_realtime('msgprint', os.environ.get('IOT_SERVER'))
 
 def ping_device(doc, method):
