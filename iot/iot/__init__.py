@@ -131,6 +131,7 @@ def getDeviceConfig(node_id):
         "send_trigger": node.send_trigger,
         "immediate_start": node.immediate_start,
         "enable_alarms": node.enable_alarms,
+        "interval_alarms": node.interval_alarms, # hour
         "time_offset" : node.time_offset  # microseconds
     }
 
