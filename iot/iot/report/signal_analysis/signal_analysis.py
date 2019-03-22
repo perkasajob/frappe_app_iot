@@ -17,12 +17,12 @@ def execute(filters=None):
 	columns, data = ['Date', 'Avg', 'Min', 'Max'], []
 	from_date, to_date = getdate(filters.from_date), getdate(filters.to_date)
 	if filters.signal:
-		label, data = get_data(from_date, to_date, filters.node, filters.signal)
+		label, data = get_data(from_date, to_date, filters.interval, filters.node, filters.signal)
 
 	return columns, data
 
 
-def get_data(from_date, to_date, node, signal):
+def get_data(from_date, to_date, interval, node, signal):
 	site_name = cstr(frappe.local.site)
 	# print("#####################################################################")
 	# print(site_name)
@@ -32,7 +32,7 @@ def get_data(from_date, to_date, node, signal):
 
 	es = Elasticsearch([frappe.get_conf().get("elastic_server")],scheme="https", port=443)
 	# doc = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"signal":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"max_output1":{"max":{"field":"192_168_1_128.PM1_Line_signal"}}}}}}
-	query = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"signal":{"date_histogram":{"field":"id","interval":"8h","format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"signal_avg":{"avg":{"field":sg_signal_str}}, "signal_max":{"max":{"field":sg_signal_str}}, "signal_min":{"min":{"field":sg_signal_str}} }}}}
+	query = {"size":0,"query":{"constant_score":{"filter":{"range":{"id":{"gte":from_date,"lte":to_date,"format":"yyyy-MM-dd","time_zone":"+07:00"}}}}},"aggs":{"signal":{"date_histogram":{"field":"id","interval": interval,"format":"yy-MM-dd HH:mm","time_zone":"+07:00","offset":"+0h"},"aggs":{"signal_avg":{"avg":{"field":sg_signal_str}}, "signal_max":{"max":{"field":sg_signal_str}}, "signal_min":{"min":{"field":sg_signal_str}} }}}}
 	res = es.search(index=site_name, body=query)
 	res = res['aggregations']['signal']['buckets']
 
@@ -45,9 +45,12 @@ def get_data(from_date, to_date, node, signal):
 		if r['signal_avg']['value'] == None:
 			continue
 
-		utc_dt = datetime.utcfromtimestamp(r['key']/1000 - 1)
+		utc_dt = datetime.utcfromtimestamp(r['key']/1000)
 		t = convert_utc_to_user_timezone(utc_dt)
-		date_str = t.strftime('%y-%m-%d')
+		if interval == "24h" :
+			date_str = t.strftime('%y-%m-%d')
+		else:
+			date_str = t.strftime('%y-%m-%d %H:%M')
 
 		d[date_str] = [
 			round(float(r['signal_avg']['value']),2),

@@ -21,6 +21,15 @@ frappe.query_reports["Signal Analysis"] = {
 			"width": "60px"
 		},
 		{
+			"fieldname":"interval",
+			"label": __("Interval"),
+			"fieldtype": "Select",
+			"default": "24h",
+			"reqd": 1,
+			"width": "20px",
+			options: [1,2,3,4,6,8,12,24].map(e =>{ return { "value": e+"h", "label": e+"h" }}),
+		},
+		{
 			"fieldname":"node",
 			"label": __("Node"),
 			"fieldtype": "Link",
