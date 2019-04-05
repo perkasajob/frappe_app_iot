@@ -17,15 +17,17 @@ app_license = "Proprietary"
 # include js, css files in header of desk.html
 # app_include_css = "/assets/iot/css/iot.css"
 app_include_js = "assets/js/iot.min.js"
-app_include_css = ["assets/css/iot.css"]
+app_include_css = ["assets/css/iot.css", "assets/css/cesium156.css"]
 
 # include js, css files in header of web template
 # web_include_css = "/assets/iot/css/iot.css"
 # web_include_js = "/assets/iot/js/iot.js"
+page_css = {"navigation": ["public/css/cesium156.css"]}
 
 # include js in page
-page_js = {"dashboard_rt" : ["public/js/mqtt.js","public/js/RealtimeClient.js","public/js/muuri.js","public/js/gauge.js" ]}
-
+page_js = {"dashboard_rt" : ["public/js/mqtt.js","public/js/RealtimeClient.js","public/js/muuri.js","public/js/gauge.js" ]
+          }
+#  "navigation": ["public/js/cesium156.js"]
 # include js in doctype views
 # doctype_js = {"doctype" : "public/js/doctype.js"}
 # doctype_list_js = {"doctype" : "public/js/doctype_list.js"}

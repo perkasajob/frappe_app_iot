@@ -22,6 +22,7 @@ const uuidv4 = () => {
   }
 const clientId = frappe.session.user_fullname+uuidv4();
 const username = frappe.session.user
+let enable_relayout = false;
 let configs={};
 var charts = []
 let charts_len = []
@@ -61,6 +62,18 @@ function getUrlVars() {
         vars[key] = value;
     });
     return vars;
+}
+function onOffreLayout(){
+	if(enable_relayout){
+		$(".octicon").show()
+		$(".muuri-item").css('touch-action','none')
+
+		enable_relayout = false
+	}else{
+		$(".octicon").hide()
+		$(".muuri-item").css('touch-action','')
+		enable_relayout = true
+	}
 }
 
 function addData( obj, visualization ){
@@ -257,6 +270,9 @@ frappe.pages['dashboard_rt'].on_page_load = function(wrapper) {
 	wrapper = wrapper
 
 	page.add_menu_item('Nodes', () => frappe.set_route('List','Node' ))
+	page.add_menu_item('On/Off reLayout', () => {
+		onOffreLayout()
+	})
 
 	if(!nodeId){
 		nodeId=''
@@ -489,7 +505,11 @@ class Dashboard {
 					layoutOnInit: false,
 					dragStartPredicate: {
 						handle: '.octicon-three-bars'
-					}
+					},
+					layoutDuration: 400,
+  				layoutEasing: 'ease',
+					dragReleaseDuration: 400,
+  				dragReleaseEasing: 'ease'
 				}).on('move', function () {
 					saveLayout(grid)
 				});
@@ -500,6 +520,7 @@ class Dashboard {
 				} else {
 					grid.layout(true);
 				}
+				onOffreLayout();
 
 				configs.signal.forEach((signal)=>{
 					if(signal.visualization === 'dial'){

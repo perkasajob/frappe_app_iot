@@ -2,7 +2,7 @@
 {% for d in data  %}
     <div class="col-xs-12 col-sm-{{d.width}} col-md-{{d.width}} item" data-id="{{d.dataId}}">
         <div class="card item-content" >
-        <div class="card-header" id={{d.dataId}}-{{d.header}}>{{d.header}}<a style="float:right" href="#"><i class="octicon octicon-three-bars"></i></a></div>
+        <div class="card-header" id={{d.dataId}}-{{d.header}}>{{d.header}}<div style="float:right; cursor: pointer;" href="#"><i class="octicon octicon-three-bars"></i></div></div>
         <div class="card-body text-center">
             {% if d.visualization == "chart" %}
                 <div class="charts"  style="height: 320px;margin:-1.25rem">

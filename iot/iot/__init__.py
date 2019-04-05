@@ -300,3 +300,70 @@ def getCertificatePath(node_id):
     return iotMPublish()
 
     # return iotSendCommand(node_id, payload)
+
+
+
+@frappe.whitelist(allow_guest=True)
+def getItemInfo2(search_value=""):
+    return frappe.db.sql("SELECT asset, sn.item_name, sn.item_code, status,sn.location,custodian,ta.purchase_date,repair_status,ar.description,maintenance_manager,maintenance_team FROM `tabSerial No` sn INNER JOIN `tabAsset` ta ON sn.asset=ta.name INNER JOIN `tabAsset Repair` ar ON sn.asset=ar.asset_name INNER JOIN `tabAsset Maintenance` am ON sn.asset=am.asset_name WHERE sn.name=%s",
+	    					(search_value), as_dict=True)
+
+
+@frappe.whitelist(allow_guest=True)
+def getItemInfo(search_value=""):
+    data = dict()
+
+    if search_value:
+        data = search_serial_or_batch_or_barcode_number(search_value)
+
+    item_code = data.get("item_code") if data.get("item_code") else search_value
+    serial_no = data.get("serial_no") if data.get("serial_no") else ""
+    batch_no = data.get("batch_no") if data.get("batch_no") else ""
+    barcode = data.get("barcode") if data.get("barcode") else ""
+    res= {}
+    res = {
+		'items': res
+		}
+
+    if serial_no:
+        asset = frappe.db.get_value("Asset", data['asset'], ['name', 'asset_name', 'item_name', 'item_code', 'status', 'location','custodian'], as_dict=True)
+        repair = frappe.db.get_value('Asset Repair', {'asset_name': data['asset']}, ['name', 'asset_name', 'item_code' ,'repair_status', 'description'], as_dict=True)
+        maintanance = frappe.db.get_value('Asset Maintenance', {'asset_name': data['asset']}, ['name', 'asset_name', 'maintenance_manager' ,'maintenance_team'], as_dict=True)
+        res.update({
+			'serial_no': serial_no,
+            'asset': asset,
+            'repair': repair,
+            'maintenance': maintanance
+		})
+
+
+    if batch_no:
+    	res.update({
+			'batch_no': batch_no
+		})
+
+    if barcode:
+    	res.update({
+			'barcode': barcode
+		})
+
+    return res
+
+
+def search_serial_or_batch_or_barcode_number(search_value):
+	# search barcode no
+	barcode_data = frappe.db.get_value('Item Barcode', {'barcode': search_value}, ['barcode', 'parent as item_code'], as_dict=True)
+	if barcode_data:
+		return barcode_data
+
+	# search serial no
+	serial_no_data = frappe.db.get_value('Serial No', search_value, ['name as serial_no', 'item_code', 'asset'], as_dict=True)
+	if serial_no_data:
+		return serial_no_data
+
+	# search batch no
+	batch_no_data = frappe.db.get_value('Batch', search_value, ['name as batch_no', 'item as item_code'], as_dict=True)
+	if batch_no_data:
+		return batch_no_data
+
+	return {}
